@@ -13,12 +13,12 @@ OSATE_DOWNLOAD_URL=https://osate-build.sei.cmu.edu/download/osate/stable/latest/
 case "$(uname -s)" in
     Darwin)
         OSATE_FILTER="macos"
-        SED=gsed
+        SED="gsed"
         ;;
 
     Linux)
         OSATE_FILTER="linux"
-        SED=sed
+        SED="sed"
         ;;
 esac
 
@@ -33,20 +33,15 @@ download_osate() {
                        grep -io '<a href=['"'"'"][^"'"'"']*['"'"'"]' | \
                        $SED -e 's/^<a href=["'"'"']//i' -e 's/["'"'"']$//i' | grep $OSATE_FILTER)
 
-
-    OSATE_INSTALL_DIR=$(echo $OSATE_BINARY | cut -f1,2 -d'-')
+    echo Installing "$OSATE_BINARY"
+    
+    OSATE_INSTALL_DIR=$(echo "$OSATE_BINARY" | cut -f1,2 -d'-')
 
     # 2. Download iff there is no local copy, or if the size does not
     #    match (e.g. case of an interrupted download).
 
-    local_file_size=$([[ -f ${OSATE_BINARY} ]] && wc -c < ${OSATE_BINARY} || echo "0")
-    remote_file_size=$(curl -sI $OSATE_DOWNLOAD_URL/$OSATE_BINARY | awk '/Content-Length/ { print $2 }' | tr -d '\r' )
+    curl -C - $OSATE_DOWNLOAD_URL/"$OSATE_BINARY" --output "$OSATE_BINARY"
 
-    if [[ "$local_file_size" -ne "$remote_file_size" ]]; then
-        curl $OSATE_DOWNLOAD_URL/$OSATE_BINARY $zflag --output $OSATE_BINARY
-    else
-        echo Nothing to download, exiting
-    fi
 }
 
 ###############################################################################
@@ -54,21 +49,21 @@ download_osate() {
 ###############
 
 install_osate() {
-    mkdir $OSATE_INSTALL_DIR
+    mkdir "$OSATE_INSTALL_DIR"
 
     case "$(uname -s)" in
         Darwin)
-            tar -C $OSATE_INSTALL_DIR -xf $OSATE_BINARY
+            tar -C "$OSATE_INSTALL_DIR" -xf "$OSATE_BINARY"
             echo Administrator password required to adjust quarantine status
             ( pushd $OSATE_INSTALL_DIR ; sudo xattr -rd com.apple.quarantine osate2.app/ ; popd)
             ;;
 
         Linux)
-            tar -C $OSATE_INSTALL_DIR -xf $OSATE_BINARY
+            tar -C "$OSATE_INSTALL_DIR" -xf "$OSATE_BINARY"
             ;;
     esac
 
-    echo Latest OSATE release installed in $OSATE_INSTALL_DIR
+    echo Latest OSATE release installed in "$OSATE_INSTALL_DIR"
 }
 
 ###############################################################################
