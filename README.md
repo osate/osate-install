@@ -12,7 +12,7 @@ From the terminal, simply issue the following command
 
 
 ```
-./install-script.sh
+./install-osate.sh
 ```
 
 The script will directly download the latest release of OSATE, and
